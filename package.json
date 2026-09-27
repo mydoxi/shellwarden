@@ -1,0 +1,52 @@
+{
+  "name": "shellwarden",
+  "version": "0.1.0",
+  "description": "Safety hooks for Claude Code: blocks destructive shell commands, force-pushes, database drops and leaked secrets before they run.",
+  "type": "module",
+  "bin": {
+    "shellwarden": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "hooks",
+    "ai-agent",
+    "safety",
+    "guardrails",
+    "shell",
+    "security",
+    "secrets"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mydoxi/medox.git"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}
