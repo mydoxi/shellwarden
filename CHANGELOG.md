@@ -9,3 +9,5 @@ First release.
 - Shell parser that sees through `&&`/`||`/`;` chains, pipes, `sudo`, `env`, `xargs`, `bash -c`, `eval`, `$(...)`, heredocs and `find -exec`.
 - `shellwarden install` / `uninstall` / `test` / `rules` commands.
 - Project and user config: per-rule overrides, allow patterns and custom rules.
+- Claude Code plugin and marketplace (`/plugin install shellwarden@shellwarden`).
+- `shellwarden log` to review blocked and flagged actions (secrets redacted, file contents never stored).

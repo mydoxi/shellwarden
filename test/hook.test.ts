@@ -5,9 +5,10 @@ import { describe, expect, it } from "vitest";
 import { emptyConfig } from "../src/config.js";
 import { runHook } from "../src/hook.js";
 import { HOOK_MATCHER, install, uninstall } from "../src/install.js";
+import { readLog } from "../src/log.js";
 
 const home = "/home/dev";
-const hook = (payload: unknown) => runHook(JSON.stringify(payload), { home, config: emptyConfig() });
+const hook = (payload: unknown) => runHook(JSON.stringify(payload), { home, config: emptyConfig(), logFile: null });
 
 describe("runHook", () => {
   it("prints nothing for a safe command", () => {
@@ -29,7 +30,7 @@ describe("runHook", () => {
   });
 
   it("fails open with a warning on malformed input", () => {
-    const r = runHook("not json", { home, config: emptyConfig() });
+    const r = runHook("not json", { home, config: emptyConfig(), logFile: null });
     expect(r.stdout).toBe("");
     expect(r.exitCode).toBe(1);
     expect(r.stderr).toContain("could not parse");
@@ -67,5 +68,36 @@ describe("install / uninstall", () => {
     fs.writeFileSync(file, "{ broken");
     expect(() => install(file, "shellwarden check")).toThrow();
     expect(fs.readFileSync(file, "utf8")).toBe("{ broken");
+  });
+});
+
+describe("log", () => {
+  const logFile = () => path.join(fs.mkdtempSync(path.join(os.tmpdir(), "shellwarden-log-")), "log.jsonl");
+  const token = "ghp_" + "A1b2C3d4E5".repeat(4);
+
+  it("records flagged actions with secrets redacted, and skips allowed ones", () => {
+    const file = logFile();
+    const run = (command: string) => runHook(JSON.stringify({ tool_name: "Bash", tool_input: { command }, cwd: "/home/dev/project" }), { home, config: emptyConfig(), logFile: file });
+    run("ls");
+    run(`GH_TOKEN=${token} npm publish`);
+    const entries = readLog(file, 10);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ decision: "ask", tool: "Bash", rules: ["release.publish"], cwd: "/home/dev/project" });
+    expect(entries[0]!.subject).toContain("ghp_…[redacted]");
+    expect(entries[0]!.subject).not.toContain(token);
+  });
+
+  it("logs the file path but never the file content", () => {
+    const file = logFile();
+    runHook(JSON.stringify({ tool_name: "Write", tool_input: { file_path: "src/a.ts", content: `const t = "${token}";` }, cwd: "/home/dev/project" }), { home, config: emptyConfig(), logFile: file });
+    const [entry] = readLog(file, 10);
+    expect(entry).toMatchObject({ decision: "deny", subject: "src/a.ts" });
+    expect(fs.readFileSync(file, "utf8")).not.toContain("A1b2C3d4E5");
+  });
+
+  it("respects log: false in config", () => {
+    const file = logFile();
+    runHook(JSON.stringify({ tool_name: "Bash", tool_input: { command: "npm publish" }, cwd: "/tmp" }), { home, config: { ...emptyConfig(), log: false }, logFile: file });
+    expect(fs.existsSync(file)).toBe(false);
   });
 });

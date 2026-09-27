@@ -26,3 +26,18 @@ jobs:
         run: |
           echo '{"tool_name":"Bash","tool_input":{"command":"rm -rf ~"},"cwd":"'"$PWD"'"}' | node dist/cli.js check | grep -q '"permissionDecision":"deny"'
           test -z "$(echo '{"tool_name":"Bash","tool_input":{"command":"ls"},"cwd":"'"$PWD"'"}' | node dist/cli.js check)"
+
+  plugin-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:plugin
+      - name: Bundle is up to date
+        run: git diff --exit-code -- plugin .claude-plugin || (echo "Run 'npm run build:plugin' and commit the result." && exit 1)
+      - name: Plugin hook works
+        run: echo '{"tool_name":"Bash","tool_input":{"command":"git push -f origin main"},"cwd":"'"$PWD"'"}' | node plugin/scripts/shellwarden.mjs check | grep -q '"permissionDecision":"deny"'

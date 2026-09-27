@@ -46,7 +46,10 @@ npm test            # all tests
 npm run typecheck
 npm run build
 node dist/cli.js test "your command here"
+npm run build:plugin   # regenerate plugin/scripts/shellwarden.mjs; commit it with your change
 ```
+
+The Claude Code plugin runs a single bundled file, `plugin/scripts/shellwarden.mjs`, because plugins are installed straight from git without `npm install`. CI fails if the bundle is out of date.
 
 ## Reporting a false positive or a miss
 

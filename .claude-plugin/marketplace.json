@@ -1,0 +1,23 @@
+{
+  "name": "shellwarden",
+  "description": "Safety hooks for Claude Code.",
+  "owner": {
+    "name": "mydoxi"
+  },
+  "plugins": [
+    {
+      "name": "shellwarden",
+      "source": "./plugin",
+      "description": "Blocks destructive shell commands, force-pushes, database drops and leaked secrets before Claude runs them.",
+      "version": "0.1.0",
+      "category": "security",
+      "tags": [
+        "safety",
+        "guardrails",
+        "hooks",
+        "git",
+        "secrets"
+      ]
+    }
+  ]
+}

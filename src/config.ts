@@ -20,6 +20,8 @@ export interface Config {
   /** Regular expressions; a command or file path matching one is never flagged by built-in rules. */
   allow: string[];
   custom: CustomRule[];
+  /** Record flagged actions to the local log read by `shellwarden log`. Defaults to true. */
+  log?: boolean;
 }
 
 export const PROJECT_CONFIG = ".shellwarden.json";
@@ -72,6 +74,10 @@ export function parseConfig(raw: unknown, source: string, warnings: string[]): C
       }
     } else warnings.push(`${source}: "allow" must be an array`);
   }
+  if (obj.log !== undefined) {
+    if (typeof obj.log === "boolean") cfg.log = obj.log;
+    else warnings.push(`${source}: "log" must be true or false`);
+  }
   if (obj.custom !== undefined) {
     if (Array.isArray(obj.custom)) {
       for (const c of obj.custom) {
@@ -98,6 +104,7 @@ export function mergeConfigs(...configs: Config[]): Config {
   const out = emptyConfig();
   for (const c of configs) {
     Object.assign(out.rules, c.rules);
+    if (c.log !== undefined) out.log = c.log;
     out.allow.push(...c.allow);
     out.custom.push(...c.custom);
   }

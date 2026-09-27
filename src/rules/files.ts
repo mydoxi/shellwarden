@@ -41,6 +41,16 @@ export function findSecret(content: string): { name: string; preview: string } |
   return null;
 }
 
+/** Replace anything that looks like a real secret with a short redacted marker. */
+export function redactSecrets(text: string): string {
+  let out = text;
+  for (const { pattern } of SECRET_PATTERNS) {
+    const global = new RegExp(pattern.source, pattern.flags.includes("g") ? pattern.flags : `${pattern.flags}g`);
+    out = out.replace(global, (m) => (isPlaceholder(m) ? m : `${m.slice(0, 4)}…[redacted]`));
+  }
+  return out;
+}
+
 export const secretInFile: FileRule = {
   kind: "file",
   id: "secrets.hardcoded",

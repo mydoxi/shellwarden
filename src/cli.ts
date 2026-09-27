@@ -7,6 +7,7 @@ import { loadConfig } from "./config.js";
 import { evaluateCommand, evaluateFileWrite, type Verdict } from "./engine.js";
 import { runHook } from "./hook.js";
 import { install, uninstall } from "./install.js";
+import { defaultLogPath, readLog } from "./log.js";
 import { builtinRules } from "./rules/index.js";
 
 const HELP = `shellwarden - safety hooks for Claude Code
@@ -17,6 +18,7 @@ Usage:
   shellwarden test "<command>"                         Show what shellwarden thinks of a command
   shellwarden test --file <path> [--content <text>]    ...or of a file write
   shellwarden rules [--markdown]                       List the built-in rules
+  shellwarden log [-n 20] [--json]                     Show recently blocked or flagged actions
   shellwarden check                                    Run as a hook (reads JSON on stdin)
 
 Install targets:
@@ -34,7 +36,11 @@ const green = (s: string) => paint("32", s);
 const dim = (s: string) => paint("2", s);
 const bold = (s: string) => paint("1", s);
 
+/** Replaced at bundle time for the Claude Code plugin build, which ships without package.json. */
+declare const SHELLWARDEN_VERSION: string | undefined;
+
 function version(): string {
+  if (typeof SHELLWARDEN_VERSION !== "undefined") return SHELLWARDEN_VERSION;
   const pkgPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "package.json");
   return (JSON.parse(fs.readFileSync(pkgPath, "utf8")) as { version: string }).version;
 }
@@ -129,6 +135,26 @@ function main(argv: string[]): number {
     for (const r of builtinRules) {
       const d = r.decision === "deny" ? red("deny") : yellow("ask ");
       console.log(`${d}  ${bold(r.id.padEnd(28))} ${r.description}`);
+    }
+    return 0;
+  }
+
+  if (cmd === "log") {
+    const file = defaultLogPath(os.homedir());
+    const limit = Number(option(args, "-n") ?? 20) || 20;
+    const entries = readLog(file, limit);
+    if (args.includes("--json")) {
+      for (const e of entries) console.log(JSON.stringify(e));
+      return 0;
+    }
+    if (entries.length === 0) {
+      console.log(`Nothing blocked or flagged yet. ${dim(`(${file})`)}`);
+      return 0;
+    }
+    for (const e of entries) {
+      const d = e.decision === "deny" ? red("DENY") : yellow("ASK ");
+      console.log(`${dim(e.time.replace("T", " ").slice(0, 19))}  ${d}  ${bold(e.rules.join(", "))}`);
+      console.log(`    ${e.subject.split("\n")[0]}`);
     }
     return 0;
   }

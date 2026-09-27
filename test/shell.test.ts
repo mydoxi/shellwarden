@@ -78,3 +78,12 @@ describe("analyzeCommand", () => {
     expect(analyzeCommand("/bin/rm -rf a; \\rm b", env).map((c) => c.program)).toEqual(["rm", "rm"]);
   });
 });
+
+describe("robustness", () => {
+  const nasty = ['echo "unterminated', "echo 'unterminated", "$(", "`", "cat <<EOF", "a | | b", ";;;&&||", "${", "echo $((1+2))", "((", "))", "\\", "<", ">", "2>&", "x".repeat(10000), "$(".repeat(200), '"'.repeat(501)];
+  for (const input of nasty) {
+    it(`does not throw on ${JSON.stringify(input.slice(0, 20))}`, () => {
+      expect(() => analyzeCommand(input, env)).not.toThrow();
+    });
+  }
+});

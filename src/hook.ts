@@ -1,6 +1,7 @@
 import os from "node:os";
 import { loadConfig, type Config } from "./config.js";
 import { evaluateToolCall, type Verdict } from "./engine.js";
+import { appendLog, defaultLogPath } from "./log.js";
 
 export interface HookResult {
   stdout: string;
@@ -19,12 +20,19 @@ export function formatReason(v: Verdict): string {
   return [lead, ...lines, tail].filter(Boolean).join("\n");
 }
 
+export interface HookOptions {
+  home?: string;
+  config?: Config;
+  /** Where to record flagged actions; `null` disables logging. Defaults to the user's state directory. */
+  logFile?: string | null;
+}
+
 /**
  * Handle one PreToolUse hook invocation. Never throws: if the input can't be
  * understood, the call is left to Claude Code's normal permission flow and a
  * warning is written to stderr.
  */
-export function runHook(stdin: string, opts: { home?: string; config?: Config } = {}): HookResult {
+export function runHook(stdin: string, opts: HookOptions = {}): HookResult {
   let payload: Record<string, unknown>;
   try {
     payload = JSON.parse(stdin) as Record<string, unknown>;
@@ -45,6 +53,9 @@ export function runHook(stdin: string, opts: { home?: string; config?: Config } 
 
   const verdict = evaluateToolCall(toolName, payload.tool_input, { cwd, home }, config);
   if (verdict.decision === "allow") return { stdout: "", stderr, exitCode: 0 };
+
+  const logFile = opts.logFile === undefined ? defaultLogPath(home) : opts.logFile;
+  if (logFile !== null && config.log !== false) appendLog(logFile, verdict, toolName, payload.tool_input, cwd);
 
   const output = {
     hookSpecificOutput: {

@@ -29,6 +29,17 @@ It understands shell syntax rather than grepping strings. It sees through `&&` c
 
 ## Install
 
+**As a Claude Code plugin** (recommended). Run these inside Claude Code:
+
+```
+/plugin marketplace add mydoxi/medox
+/plugin install shellwarden@shellwarden
+```
+
+That's it. The plugin ships a self-contained script, so there's no npm install and no settings to edit.
+
+**Or with npm**, if you want the `shellwarden` command in your terminal too:
+
 ```bash
 npm install -g shellwarden
 shellwarden install          # this project: .claude/settings.json (commit it to protect your whole team)
@@ -36,11 +47,19 @@ shellwarden install          # this project: .claude/settings.json (commit it to
 shellwarden install --user   # every project on this machine: ~/.claude/settings.json
 ```
 
-Restart Claude Code (or open `/hooks`) and you're protected. Each check takes a few tens of milliseconds. shellwarden has zero runtime dependencies and never touches the network.
+Restart Claude Code (or open `/hooks`) to pick it up. Each check takes a few tens of milliseconds. shellwarden has zero runtime dependencies and never touches the network. Remove it with `shellwarden uninstall` (add `--user` if you installed it there).
 
-Without a global install: `npx shellwarden install` writes a hook that runs through `npx`, which is slower on each call.
+## See what it caught
 
-Remove it with `shellwarden uninstall` (add `--user` if you installed it there).
+```
+$ shellwarden log
+2026-09-27 14:02:11  DENY  git.force-push
+    git push --force origin main
+2026-09-27 14:05:43  ASK   git.reset-hard
+    git reset --hard HEAD~3
+```
+
+Only flagged actions are recorded, in `~/.local/state/shellwarden/log.jsonl` on your own machine. Secrets in commands are redacted, and file contents are never stored. Set `"log": false` in your config to turn it off.
 
 ## What it catches
 
@@ -109,6 +128,8 @@ Put a `.shellwarden.json` in your project (or `~/.config/shellwarden/config.json
 - **`rules`** sets a rule (or a whole category with `category.*`) to `"deny"`, `"ask"` or `"off"`.
 - **`allow`** takes regular expressions. A single command, or a file path, that matches one is never flagged by built-in rules. Other commands in the same `&&` chain are still checked.
 - **`custom`** holds your own rules. The `pattern` is tested against the full shell command and against written file paths. Use `applies: ["bash"]` or `["file"]` to narrow it.
+
+- **`log`**: set it to `false` to stop recording flagged actions.
 
 A broken config file is reported as a warning and skipped. The built-in rules keep protecting you.
 
