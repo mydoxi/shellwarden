@@ -2015,7 +2015,7 @@ Install targets:
   --local    .claude/settings.local.json in the current project (just you)
   --user     ~/.claude/settings.json (every project on this machine)
 
-Docs: https://github.com/mydoxi/medox`;
+Docs: https://github.com/mydoxi/shellwarden`;
 var color = process.stdout.isTTY && !process.env.NO_COLOR;
 var paint = (code, s) => color ? `\x1B[${code}m${s}\x1B[0m` : s;
 var red = (s) => paint("31", s);

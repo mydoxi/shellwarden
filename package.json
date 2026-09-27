@@ -43,7 +43,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mydoxi/medox.git"
+    "url": "git+https://github.com/mydoxi/shellwarden.git"
+  },
+  "homepage": "https://github.com/mydoxi/shellwarden#readme",
+  "bugs": {
+    "url": "https://github.com/mydoxi/shellwarden/issues"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

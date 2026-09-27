@@ -32,7 +32,7 @@ It understands shell syntax rather than grepping strings. It sees through `&&` c
 **As a Claude Code plugin** (recommended). Run these inside Claude Code:
 
 ```
-/plugin marketplace add mydoxi/medox
+/plugin marketplace add mydoxi/shellwarden
 /plugin install shellwarden@shellwarden
 ```
 
